@@ -1,12 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { HttpError } from "http-errors";
+import { ControllerType } from "../types/types.js";
 
-export const globalAsyncHandler = (
-  requireHandler: (err: HttpError, req: Request, res: Response, next: NextFunction) => Promise<void>
-) => {
-  return (err: HttpError, req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(requireHandler(err, req, res, next)).catch((error) => {
-      next(error);
-    });
+export const globalAsyncErrorHandler =
+  (func: ControllerType) => (req: Request, res: Response, next: NextFunction) => {
+    return Promise.resolve(func(req, res, next)).catch(next);
   };
-};

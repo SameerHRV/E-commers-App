@@ -1,10 +1,13 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
+import bcrypt from "bcrypt";
 
 interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
+  password: string;
+  isModified(path: string): boolean;
   image: string;
   role: "admin" | "user";
   gender: "male" | "female";
@@ -19,8 +22,6 @@ const userSchema = new Schema(
   {
     _id: {
       type: String,
-      required: [true, "User ID is required"],
-      unique: true,
     },
     username: {
       type: String,
@@ -32,6 +33,12 @@ const userSchema = new Schema(
       required: [true, "Email is required"],
       unique: [true, "Email already exists"],
       validate: validator.default.isEmail,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+      maxlength: 20,
     },
     image: {
       type: String,
@@ -52,19 +59,36 @@ const userSchema = new Schema(
       required: [true, "Date of birth is required"],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
 userSchema.virtual("age").get(function () {
   const today = new Date();
   const dob = this.dob;
   let age = today.getFullYear() - dob.getFullYear();
 
-  if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+  if (
+    today.getMonth() < dob.getMonth() ||
+    (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+  ) {
     age--;
   }
 
   return age;
 });
+
+userSchema.pre("save", async function (next) {
+  const user = this as unknown as IUser;
+
+  if (!user.isModified("password")) {
+    return next();
+  }
+
+  user.password = await bcrypt.hash(user.password, 10);
+  next();
+});
+
+userSchema.methods.comparePassword = async function (password: string) {
+  return await bcrypt.compare(password, this.password);
+};
 
 export const User = mongoose.model<IUser>("User", userSchema);
