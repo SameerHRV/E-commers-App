@@ -3,7 +3,10 @@ import userRouter from "./routes/user.router.js";
 import morgan from "morgan";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
 import productRouter from "./routes/product.route.js";
+import NodeCache from "node-cache";
 const app = express();
+
+export const myCache = new NodeCache();
 
 app.use(morgan("dev"));
 

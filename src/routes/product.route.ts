@@ -6,6 +6,7 @@ import {
   getSingleProduct,
   latestProduct,
   newProduct,
+  getAllProducts,
   updateProduct,
 } from "../controllers/product.controller.js";
 import { uploadImage } from "../middlewares/multer.middleware.js";
@@ -24,4 +25,6 @@ productRouter
   .get(getSingleProduct)
   .put(authMiddleware, uploadImage, updateProduct)
   .delete(authMiddleware, deletedProduct);
+
+productRouter.get("/all", getAllProducts);
 export default productRouter;
