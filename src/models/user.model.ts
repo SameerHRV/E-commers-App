@@ -1,12 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
-import bcrypt from "bcrypt";
 
 interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
-  password: string;
   isModified(path: string): boolean;
   image: string;
   role: "admin" | "user";
@@ -33,12 +31,6 @@ const userSchema = new Schema(
       required: [true, "Email is required"],
       unique: [true, "Email already exists"],
       validate: validator.default.isEmail,
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      minlength: 6,
-      maxlength: 20,
     },
     image: {
       type: String,
@@ -75,20 +67,5 @@ userSchema.virtual("age").get(function () {
 
   return age;
 });
-
-userSchema.pre("save", async function (next) {
-  const user = this as unknown as IUser;
-
-  if (!user.isModified("password")) {
-    return next();
-  }
-
-  user.password = await bcrypt.hash(user.password, 10);
-  next();
-});
-
-userSchema.methods.comparePassword = async function (password: string) {
-  return await bcrypt.compare(password, this.password);
-};
 
 export const User = mongoose.model<IUser>("User", userSchema);
